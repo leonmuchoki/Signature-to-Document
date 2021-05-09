@@ -11,3 +11,7 @@
     background-color:transparent;
     border:1px solid blue
 }
+
+.file-input {
+    display: none;
+  }

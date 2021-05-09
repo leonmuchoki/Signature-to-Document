@@ -4,9 +4,25 @@
        (dropping)="elementDropped($event)" 
        class="droppable-container">
     <div style="flex-grow: 1; margin-left: auto;">
-      <button class="btn btn-primary btn-md" (click)="savePdf()">
-        Download Document
-      </button>
+      <div style="display: flex; justify-content: space-between; padding: 10px;">
+        <div style="margin-right: 5px;">
+          <input type="file" class="file-input"
+        (change)="onFileSelected($event)" #fileUpload>
+
+          <div class="file-upload">
+
+            {{fileName || "No file uploaded yet."}}
+
+              <button mat-mini-fab color="primary" class="upload-btn"
+                (click)="fileUpload.click()">
+                  <mat-icon>attach_file</mat-icon>
+              </button>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-md" (click)="savePdf()">
+          Download Document
+        </button>
+      </div>
     </div>
     <div>
       <div>

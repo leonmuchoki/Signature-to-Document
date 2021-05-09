@@ -18,6 +18,7 @@ export class PdfViewerComponent implements OnInit,AfterViewInit  {
   pageRendering : boolean = false
   pageNumPending = null
   scale : number = 1.2
+  fileName = '';
 
   image = new Image();
   imageSignature = new Image();
@@ -227,5 +228,28 @@ queueRenderPage(num) : void {
 
     return croppedCanvas.toDataURL();
   }
+
+  onFileSelected(event) {
+
+    const file:File = event.target.files[0];
+
+    if (file) {
+        this.fileName = file.name;
+        this.getBase64(file);
+    }
+}
+
+  getBase64(file) {
+    let reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload =  () => {
+      console.log(reader.result);
+      this.pdfSrc = reader.result.toString();
+      this.loadPdfjs();
+    };
+    reader.onerror = function (error) {
+      console.log('Error: ', error);
+    };
+}
 
 }

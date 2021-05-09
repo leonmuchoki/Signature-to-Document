@@ -1,6 +1,9 @@
 import { NgModule } from "@angular/core";
 import { BrowserModule } from "@angular/platform-browser";
 import { FormsModule } from "@angular/forms";
+import { MatIconModule } from '@angular/material/icon';
+import {MatButtonModule} from '@angular/material/button';
+
 import { SignaturePadModule } from "angular2-signaturepad";
 import { PdfJsViewerModule } from "ng2-pdfjs-viewer";
 //import { PdfViewerModule } from 'ng2-pdf-viewer';
@@ -14,6 +17,7 @@ import { PdfViewerComponent } from "./pdf-viewer/pdf-viewer.component";
 import { DraggableDirective } from "./draggable.directive";
 import { DroppableDirective } from "./droppable.directive";
 import { SafePipe } from "./safe.pipe";
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 @NgModule({
   imports: [
@@ -22,8 +26,11 @@ import { SafePipe } from "./safe.pipe";
     SignaturePadModule,
     PdfJsViewerModule,
     NgxExtendedPdfViewerModule,
-    //PdfViewerModule
+    BrowserAnimationsModule,
+    MatIconModule,
+    MatButtonModule
   ],
+  exports: [ MatButtonModule,MatIconModule ],
   declarations: [
     AppComponent,
     HelloComponent,
