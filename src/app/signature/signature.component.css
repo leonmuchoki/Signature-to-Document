@@ -1,0 +1,11 @@
+.sign-pad-containter {
+    border:1px solid black;
+    display: flex; 
+    flex-direction: column; 
+    padding: 5px;
+}
+
+.sign-image-container {
+    border:1px solid black; 
+    padding: 5px;
+}

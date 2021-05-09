@@ -1,0 +1,13 @@
+.droppable-container {
+    border:1px solid black;
+    display:flex; 
+    flex-direction:column; 
+    justify-content: center; 
+    padding: 10px;
+}
+
+#pdf-canvas {
+    flex-grow: 2;
+    background-color:transparent;
+    border:1px solid blue
+}
