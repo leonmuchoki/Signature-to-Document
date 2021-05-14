@@ -1,4 +1,6 @@
-import { Component, OnInit, ViewChild, ElementRef, Pipe, PipeTransform, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, Pipe, PipeTransform, 
+         AfterViewInit, ComponentFactoryResolver,Renderer2 } 
+from '@angular/core';
 import { DomSanitizer} from '@angular/platform-browser';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
@@ -15,18 +17,28 @@ export class PdfViewerComponent implements OnInit,AfterViewInit  {
   pdfSrc = "https://res.cloudinary.com/dze7ap73i/image/upload/v1619984699/purchase-order-form-for-free-download_znmojw.pdf";
   pdfDoc = null
   pageNum : number = 1
+  pageCount : number = 0
   pageRendering : boolean = false
   pageNumPending = null
   scale : number = 1.2
   fileName = '';
+  signedPage : number
+  pdfObj : Object = {}
+  currCanvasID : string
+
+  currPage = 1; //Pages are 1-based not 0-based
+  numPages = 0;
 
   image = new Image();
   imageSignature = new Image();
 
   @ViewChild('pdfcanvas', { static: true })
-  pdfcanvas: ElementRef<HTMLCanvasElement>;  
+  pdfcanvas: ElementRef<HTMLCanvasElement>;   
+  
+  @ViewChild('canvasContainer')
+  canvasContainerRef: ElementRef<HTMLDivElement>
 
-  @ViewChild('btnPrev')
+/*   @ViewChild('btnPrev')
   btnPrevRef: ElementRef<HTMLButtonElement>
 
   @ViewChild('btnNext')
@@ -34,9 +46,9 @@ export class PdfViewerComponent implements OnInit,AfterViewInit  {
 
   @ViewChild('pageNum')
   pageNumRef: ElementRef<HTMLSpanElement>
-
+*/
   @ViewChild('pageCount')
-  pageCountRef: ElementRef<HTMLSpanElement>
+  pageCountRef: ElementRef<HTMLSpanElement> 
 
   
 
@@ -44,7 +56,7 @@ export class PdfViewerComponent implements OnInit,AfterViewInit  {
   //papple: ElementRef<HTMLImageElement>;  
   //@ViewChild("papple", {read: ElementRef}) papple: ElementRef;
 
-  constructor() { }
+  constructor(private renderer: Renderer2) { }
 
   ngOnInit() {
     // Prepare canvas using PDF page dimensions
@@ -54,7 +66,7 @@ export class PdfViewerComponent implements OnInit,AfterViewInit  {
 
   ngAfterViewInit() {
     //this.loadPdfjs();
-    this.loadPdfjs();
+    //this.loadPdfjs();
   }
 
   loadPdfjs() : void {
@@ -68,6 +80,7 @@ export class PdfViewerComponent implements OnInit,AfterViewInit  {
       this.pdfDoc = pdfDoc_;
       //document.getElementById('page_count').textContent = this.pdfDoc.numPages;
       pageCountEl.innerText = "" + this.pdfDoc.numPages;
+      this.pageCount = +this.pdfDoc.numPages;
       // Initial/first page rendering
       this.renderPage(this.pageNum);
     })
@@ -75,13 +88,26 @@ export class PdfViewerComponent implements OnInit,AfterViewInit  {
   
   renderPage(num) : void {
     this.pageRendering = true;
-    let ctx: CanvasRenderingContext2D = this.pdfcanvas.nativeElement.getContext('2d');
 
+    const canvas = this.renderer.createElement("canvas" );
+    this.renderer.appendChild(this.canvasContainerRef.nativeElement, canvas);
+    // Set the id of the div
+    this.renderer.setProperty(canvas, 'id', "canvas_" + num);
+    this.renderer.setStyle(canvas,'margin-bottom','10px');
+    this.renderer.setStyle(canvas,'background-color','darkgrey');
+    canvas.onmouseover = (e) => { this.currCanvasID=canvas.id;console.log("on mouse over..." + this.currCanvasID)};
+    //canvas.ondragenter = (e) => { e.preventDefault();e.dataTransfer.dropEffect = 'copy'; console.log("on drag over..."); return false;};
+    //canvas.addEventListener("ondragenter", (e) => { e.preventDefault(); console.log(".....droppeed")});
+
+    //this.canvasContainerRef.nativeElement.appendChild(canvas);
+
+    let ctx: CanvasRenderingContext2D = canvas.getContext('2d');//this.pdfcanvas.nativeElement.getContext('2d');
+ 
     // Using promise to fetch the page
     this.pdfDoc.getPage(num).then((page) => {
       var viewport = page.getViewport({scale: this.scale});
-      this.pdfcanvas.nativeElement.height = viewport.height;
-      this.pdfcanvas.nativeElement.width = viewport.width;
+      canvas.height = viewport.height;//this.pdfcanvas.nativeElement.height = viewport.height;
+      canvas.width = viewport.width;//this.pdfcanvas.nativeElement.width = viewport.width;
   
       // Render PDF page into canvas context
       var renderContext = {
@@ -98,11 +124,23 @@ export class PdfViewerComponent implements OnInit,AfterViewInit  {
           this.renderPage(this.pageNumPending);
           this.pageNumPending = null;
         }
+
+        if (this.pageNum >= this.pdfDoc.numPages) {
+          return;
+        }
+        this.pageNum++;
+        this.queueRenderPage(this.pageNum);
       });
     });
   
     // Update page counters
-    this.pageNumRef.nativeElement.innerText = num; 
+    //this.pageNumRef.nativeElement.innerText = num; 
+  }
+
+  getCanvasID(e) : any {
+    console.log("getCanvasid....");
+    console.log(e);
+    return false;
   }
 
   /**
@@ -141,18 +179,21 @@ queueRenderPage(num) : void {
   
 
   elementDropped(signatureData) : void {
-    console.log("inside elementDropped")
+    console.log("inside elementDropped" + this.currCanvasID)
     console.log(signatureData);
 
-    var context: CanvasRenderingContext2D = this.pdfcanvas.nativeElement.getContext('2d');
+    this.signedPage = this.pageNum;
+
+    const canvEl = this.renderer.selectRootElement("#" + this.currCanvasID);//document.getElementById(this.currCanvasID);
+    const context: CanvasRenderingContext2D = canvEl.getContext('2d');//this.pdfcanvas.nativeElement.getContext('2d');
     
-    let x = this.pdfcanvas.nativeElement.getBoundingClientRect().left;
+/*     let x = this.pdfcanvas.nativeElement.getBoundingClientRect().left;
     let y = this.pdfcanvas.nativeElement.getBoundingClientRect().top;
     let rgt = this.pdfcanvas.nativeElement.getBoundingClientRect().right;
-    let btm = this.pdfcanvas.nativeElement.getBoundingClientRect().right;
+    let btm = this.pdfcanvas.nativeElement.getBoundingClientRect().right; */
 
-    let x_off = this.pdfcanvas.nativeElement.offsetLeft;
-    let y_off = this.pdfcanvas.nativeElement.offsetTop;
+    let x_off = canvEl.offsetLeft;
+    let y_off = canvEl.offsetTop;
    // x = signatureData["x"] - x;
     //y = signatureData["y"] - y;
     
@@ -164,8 +205,10 @@ queueRenderPage(num) : void {
     
 
     const imgSignEl = this.imageSignature;
+    const canvasContElHeight = this.canvasContainerRef.nativeElement.scrollTop;
+    console.log("canvasContElHeight: " + canvasContElHeight)
     this.imageSignature.onload = function(){   // put this above img.src 
-      context.drawImage(imgSignEl, signatureData["x"] - x_off, signatureData["y"]-y_off + window.scrollY,100,100);
+      context.drawImage(imgSignEl, signatureData["x"] - x_off, signatureData["y"] - y_off + canvasContElHeight,100,100);
       console.log("image widht: " + imgSignEl.width + " image height: " +imgSignEl.height);
   };
     this.imageSignature.src = signatureData["imageDataUrl"];
@@ -173,19 +216,36 @@ queueRenderPage(num) : void {
     //this.imageSignature.src = this.cropImageWhiteSpaces();
   }
 
-  savePdf() : void {
-    const divHeight = this.pdfcanvas.nativeElement.clientHeight;
-    const divWidth = this.pdfcanvas.nativeElement.clientWidth;
-    const options = { background: 'white', width: divWidth, height: divHeight };
-  
-    domtoimage.toPng(this.pdfcanvas.nativeElement, options).then((imgData) => {
-      const doc = new jsPDF('p', 'mm', [divWidth, divHeight]);
-      const imgProps = doc.getImageProperties(imgData);
-      const pdfWidth = doc.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  async savePdf() : Promise<void> {
+    let pdfPages = this.pdfDoc.numPages;
+    const doc = new jsPDF('p', 'mm');
+
+    await this.processDownload(pdfPages,doc).then((doc) => {
       doc.save('pdfDocument.pdf');
     });
+  }
+
+  async processDownload(pdfPages,doc) : Promise<jsPDF> {
+    for(let i = 1; i<=pdfPages; i++) {
+      if(i>1) {
+        doc.addPage();
+      }
+      let canvEl = this.renderer.selectRootElement("#canvas_" + i);
+      let divHeight = canvEl.clientHeight;
+      let divWidth = canvEl.clientWidth;
+      let options = { background: 'white', width: divWidth, height: divHeight };
+
+      await domtoimage.toPng(canvEl, options).then((imgData) => {
+        return imgData;
+      }).then((imgData) => {
+        //console.log("imagedata..." + imgData.substring(1, 40))
+        let imgProps = doc.getImageProperties(imgData);
+        let pdfWidth = doc.internal.pageSize.getWidth();
+        let pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+        doc.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      });
+    }
+     return doc;
   }
 
   cropImageWhiteSpaces() : string {
@@ -243,7 +303,7 @@ queueRenderPage(num) : void {
     let reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload =  () => {
-      console.log(reader.result);
+      //console.log(reader.result);
       this.pdfSrc = reader.result.toString();
       this.loadPdfjs();
     };

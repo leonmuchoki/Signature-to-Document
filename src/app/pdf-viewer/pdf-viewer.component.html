@@ -3,9 +3,16 @@
        [options]="{ accept: '.drag-me', autoScroll: true }"
        (dropping)="elementDropped($event)" 
        class="droppable-container">
-    <div style="flex-grow: 1; margin-left: auto;">
+    <div style="flex-grow: 1; ">
       <div style="display: flex; justify-content: space-between; padding: 10px;">
-        <div style="margin-right: 5px;">
+        <div style="margin-right: auto;">
+<!--           <button id="prev" class="btn btn-sm btn-secondary" (click)="onPrevPage()" #btnPrev>Previous</button>
+          <button id="next" class="btn btn-sm btn-secondary" (click)="onNextPage()" #btnNext style="margin: 2px;">Next</button>
+          &nbsp; &nbsp;
+          <span>Page: <span id="page_num" #pageNum></span> / <span id="page_count" #pageCount></span></span> -->
+          <span>Page Count: <span id="page_count" #pageCount></span></span>
+        </div> 
+        <div style="margin-right: 5px;margin-left: auto;">
           <input type="file" class="file-input"
         (change)="onFileSelected($event)" #fileUpload>
 
@@ -25,13 +32,8 @@
       </div>
     </div>
     <div>
-      <div>
-        <button id="prev" class="btn btn-sm btn-secondary" (click)="onPrevPage()" #btnPrev>Previous</button>
-        <button id="next" class="btn btn-sm btn-secondary" (click)="onNextPage()" #btnNext style="margin: 2px;">Next</button>
-        &nbsp; &nbsp;
-        <span>Page: <span id="page_num" #pageNum></span> / <span id="page_count" #pageCount></span></span>
-      </div>
-      <canvas id="pdf-canvas" #pdfcanvas></canvas>
+      <!-- <canvas id="pdf-canvas" #pdfcanvas></canvas>  -->
+      <div #canvasContainer id="canvas-container"></div>
     </div>
   </div>
 </div>
